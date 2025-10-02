@@ -80,5 +80,15 @@ final class MainController extends AbstractController
             'currentPage' => $page,
             'totalPages' => $totalPages,
         ]);
+
+        $search = $request->query->get('search');
+        $contacts = $search
+            ? $repository->search($search)
+            : $repository->findAll();
+
+        return $this->render('main/list.html.twig', [
+            'contacts' => $contacts,
+            'search' => $search,
+        ]);
     }
 }

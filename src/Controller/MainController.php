@@ -83,5 +83,15 @@ final class MainController extends AbstractController
             'currentPage' => $page,
             'totalPages' => $totalPages,
         ]);
+
+        $status = $request->query->get('status', 'all');
+        $contacts = ($status === 'all')
+            ? $repository->findAll()
+            : $repository->findBy(['status' => $status]);
+
+        return $this->render('main/list.html.twig', [
+            'contacts' => $contacts,
+            'currentStatus' => $status,
+        ]);
     }
 }

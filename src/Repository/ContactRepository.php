@@ -20,23 +20,10 @@ class ContactRepository extends ServiceEntityRepository
     /**
      * @return Contact[] Returns an array of Contact objects
      */
-    public function paginate(int $page, int $limit): array
+    public function searchAndPaginate(int $page, int $limit, ?string $search = ''): array
     {
         $offset = ($page - 1) * $limit;
 
-        return $this->createQueryBuilder('c')
-            ->setFirstResult($offset)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-
-    /**
-     * @return Contact[] Returns an array of Contact objects
-     */
-    public function search(string $search): array
-    {
         $qb = $this->createQueryBuilder('c');
         return $qb
             ->andWhere(
@@ -46,8 +33,27 @@ class ContactRepository extends ServiceEntityRepository
                 ),
             )
             ->setParameter('search', '%'.$search.'%')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult()
+            ;
+    }
+
+    public function countBySearch(?string $search = ''): int
+    {
+        $qb = $this->createQueryBuilder('c');
+        return $qb
+            ->select($qb->expr()->count('c.id'))
+            ->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('c.firstName', ':search'),
+                    $qb->expr()->like('c.name', ':search'),
+                ),
+            )
+            ->setParameter('search', '%'.$search.'%')
+            ->getQuery()
+            ->getSingleScalarResult()
             ;
     }
 }

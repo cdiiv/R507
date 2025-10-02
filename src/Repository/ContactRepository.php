@@ -20,11 +20,17 @@ class ContactRepository extends ServiceEntityRepository
     /**
      * @return Contact[] Returns an array of Contact objects
      */
-    public function searchAndPaginate(int $page, int $limit, ?string $search = ''): array
+    public function searchAndPaginate(int $page, int $limit, string $status, ?string $search = ''): array
     {
         $offset = ($page - 1) * $limit;
 
         $qb = $this->createQueryBuilder('c');
+
+        if ($status !== 'all')
+            $qb
+                ->andWhere('c.status = :status')
+                ->setParameter('status', $status);
+
         return $qb
             ->andWhere(
                 $qb->expr()->orX(
@@ -40,9 +46,15 @@ class ContactRepository extends ServiceEntityRepository
             ;
     }
 
-    public function countBySearch(?string $search = ''): int
+    public function countBySearch(string $status, ?string $search = ''): int
     {
         $qb = $this->createQueryBuilder('c');
+
+        if ($status !== 'all')
+            $qb
+                ->andWhere('c.status = :status')
+                ->setParameter('status', $status);
+
         return $qb
             ->select($qb->expr()->count('c.id'))
             ->andWhere(

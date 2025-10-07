@@ -69,10 +69,14 @@ final class MainController extends AbstractController
     #[Route('/liste/{page}', name: 'list')]
     public function list(ContactRepository $repository, Request $request, ?int $page = 1): Response
     {
-        $contacts = $repository->findAll();
+        $search = $request->query->get('search');
+        $contacts = $search
+            ? $repository->search($search)
+            : $repository->findAll();
 
         return $this->render('main/list.html.twig', [
             'contacts' => $contacts,
+            'search' => $search,
         ]);
     }
 }

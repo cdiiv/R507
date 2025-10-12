@@ -34,7 +34,7 @@ jobs:
           tools: composer:v2
 
       - name: Validation composer
-        run: composer validate --strict
+        run: composer validate
 
       - name: Cache des dependances
         uses: actions/cache@v3

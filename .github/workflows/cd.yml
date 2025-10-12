@@ -12,7 +12,7 @@ jobs:
     # On ne déploie que si la CI a réussi ET sur la branche develop
     if: >
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'develop'
+      github.event.workflow_run.head_branch == 'master'
 
     steps:
       - name: Checkout code
@@ -50,4 +50,5 @@ jobs:
             **/tests/**
             **/DataFixtures/**
             **/var/**
+
 

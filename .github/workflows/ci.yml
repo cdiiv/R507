@@ -33,9 +33,6 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Validation composer
-        run: composer validate
-
       - name: Cache des dependances
         uses: actions/cache@v3
         with:

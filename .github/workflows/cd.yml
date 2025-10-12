@@ -51,6 +51,8 @@ jobs:
           protocol: ftp
           server-dir: ${{ secrets.FTP_REMOTE_DIR || '/' }}
           local-dir: ./
+          timeout: 60000
+          log-level: verbose
           exclude: |
             **/.git*
             **/.git*/**

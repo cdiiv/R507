@@ -10,18 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:5.7
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: r507
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: !ChangeMe!
+          POSTGRES_DB: app
         ports:
-          - 3306:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="pg_isready"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -38,8 +39,8 @@ jobs:
         run: composer install --no-interaction --prefer-dist
 
       - name: Create .env.test.local
-        run: |
-          echo "DATABASE_URL=mysql://root:root@127.0.0.1:3306/r507" > .env.test.local
+        run: echo 'DATABASE_URL=postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8' > .env.test.local
+
 
       - name: Run Doctrine migrations
         run: php bin/console doctrine:migrations:migrate --no-interaction

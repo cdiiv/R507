@@ -1,0 +1,70 @@
+name: CI - Tests
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  tests:
+    name: Tests et Validation
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: r507_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Recuperation du code source
+        uses: actions/checkout@v4
+
+      - name: Configuration PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, gd, json, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Validation composer
+        run: composer validate --strict
+
+      - name: Cache des dependances
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Installation des packages
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Configuration de l environnement de test
+        run: |
+          echo "DATABASE_URL=mysql://root:root@127.0.0.1:3306/r507_test?serverVersion=8.0.32&charset=utf8mb4" > .env.test.local
+
+      - name: Preparation de la base de donnees
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists
+          php bin/console doctrine:migrations:migrate --env=test -n
+          php bin/console doctrine:fixtures:load --env=test -n
+
+      - name: Execution des tests PHPUnit
+        run: php bin/phpunit --testdox
+
+      - name: Rapport des tests
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "Tests passes avec succes"
+          else
+            echo "Echec de certains tests"
+            exit 1
+          fi

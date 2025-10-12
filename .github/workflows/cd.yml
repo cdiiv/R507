@@ -1,0 +1,72 @@
+name: CD - Deploiement FTP
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Publication sur serveur FTP
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Recuperation du code source
+        uses: actions/checkout@v4
+
+      - name: Configuration PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo_mysql, zip, gd
+          tools: composer:v2
+
+      - name: Installation des dependances de production
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
+
+      - name: Preparation des fichiers pour le deploiement
+        run: |
+          rm -rf var/cache/*
+          rm -rf var/log/*
+          rm -rf tests/
+          rm -rf node_modules || true
+          rm -rf .git
+          rm -rf .github
+
+      - name: Creation du fichier de version
+        run: |
+          echo "Deployed: $(date)" > deployed.txt
+          echo "Commit: ${{ github.sha }}" >> deployed.txt
+          echo "Branch: ${{ github.ref_name }}" >> deployed.txt
+
+      - name: Upload vers le serveur FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT || 21 }}
+          protocol: ftp
+          server-dir: ${{ secrets.FTP_REMOTE_DIR || '/' }}
+          local-dir: ./
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            **/tests/**
+            **/var/cache/**
+            **/var/log/**
+            **/*.md
+            .env.test
+            .env.test.local
+            .env.local
+            phpunit.xml.dist
+            composer.lock
+
+      - name: Confirmation du deploiement
+        run: |
+          echo "Deploiement FTP termine avec succes"
+          echo "Date: $(date)"
+          echo "Serveur: ${{ secrets.FTP_SERVER }}"
+          echo "Commit: ${{ github.sha }}"

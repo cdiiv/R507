@@ -1,5 +1,5 @@
 <?php
-// filepath: tests/Controller/MainControllerTest.php
+
 namespace App\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;

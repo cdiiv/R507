@@ -1,5 +1,4 @@
 <?php
-// filepath: tests/bootstrap.php
 
 use Symfony\Component\Dotenv\Dotenv;
 

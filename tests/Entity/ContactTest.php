@@ -1,5 +1,5 @@
 <?php
-// filepath: tests/Entity/ContactTest.php
+
 namespace App\Tests\Entity;
 
 use App\Entity\Contact;

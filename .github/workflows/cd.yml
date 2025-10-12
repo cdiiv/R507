@@ -23,6 +23,8 @@ jobs:
 
       - name: Installation des dependances de production
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress --no-scripts
+        env:
+          APP_ENV: prod
 
       - name: Preparation des fichiers pour le deploiement
         run: |

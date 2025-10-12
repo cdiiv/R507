@@ -1,4 +1,4 @@
-name: CD - Deploiement FTP
+name: Production Deploy Pipeline
 
 on:
   push:
@@ -7,27 +7,23 @@ on:
 
 jobs:
   deploy:
-    name: Publication sur serveur FTP
+    name: Deploiement vers serveur de production
     runs-on: ubuntu-latest
     
     steps:
-      - name: Recuperation du code source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configuration PHP 8.2
+      - name: Setup PHP environment
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, intl, pdo_mysql, zip, gd
           tools: composer:v2
 
-      - name: Installation des dependances de production
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress --no-scripts
-        env:
-          APP_ENV: prod
-
-      - name: Preparation des fichiers pour le deploiement
+      - name: Nettoyage pre-deploiement
         run: |
+          rm -rf vendor
           rm -rf var/cache/*
           rm -rf var/log/*
           rm -rf tests/
@@ -35,13 +31,13 @@ jobs:
           rm -rf .git
           rm -rf .github
 
-      - name: Creation du fichier de version
+      - name: Generation metadata deploiement
         run: |
-          echo "Deployed: $(date)" > deployed.txt
-          echo "Commit: ${{ github.sha }}" >> deployed.txt
-          echo "Branch: ${{ github.ref_name }}" >> deployed.txt
+          echo "Build date: $(date)" > build-info.txt
+          echo "Git commit: ${{ github.sha }}" >> build-info.txt
+          echo "Branch: ${{ github.ref_name }}" >> build-info.txt
 
-      - name: Upload vers le serveur FTP
+      - name: Transfert fichiers vers serveur
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -55,22 +51,23 @@ jobs:
           log-level: verbose
           exclude: |
             **/.git*
-            **/.git*/**
             **/.github/**
             **/node_modules/**
+            **/vendor/**
             **/tests/**
-            **/var/cache/**
-            **/var/log/**
+            **/var/**
+            **/*.yml
+            **/*.yaml
+            **/*.xml
+            **/*.lock
             **/*.md
-            .env.test
-            .env.test.local
+            .env.test*
             .env.local
             phpunit.xml.dist
-            composer.lock
 
-      - name: Confirmation du deploiement
+      - name: Resume du deploiement
         run: |
-          echo "Deploiement FTP termine avec succes"
-          echo "Date: $(date)"
-          echo "Serveur: ${{ secrets.FTP_SERVER }}"
-          echo "Commit: ${{ github.sha }}"
+          echo "Transfert FTP effectue avec succes"
+          echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "Destination: ${{ secrets.FTP_SERVER }}"
+          echo "Version: ${{ github.sha }}"

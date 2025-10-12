@@ -1,9 +1,9 @@
 name: CD - Deploy via FTP (after CI)
 
 on:
-  push:
-    branches:
-      - develop
+  workflow_run:
+    workflows: ["CI - Symfony"]
+    types: [completed]
 
 jobs:
   deploy:
@@ -50,3 +50,4 @@ jobs:
             **/tests/**
             **/DataFixtures/**
             **/var/**
+
